@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <style>
+            .boardRow {
+                height: 4em;
+            }
+            .boardCell {
+                width: 4em;
+                border-left: 1px solid black;
+                border-top: 1px solid black;
+            }
+        </style>
+        <script>
+            const DIRECTIONS = {
+                "LEFT": "LEFT",
+                "RIGHT": "RIGHT",
+                "UP": "UP",
+                "DOWN": "DOWN",
+            }
+            const BOARD_SIZE = 6;
+            const path = [DIRECTIONS.LEFT, DIRECTIONS.UP, DIRECTIONS.RIGHT];
+            const boardCells = [];
+
+            const followPath = (pathToFollow) => {
+                const action = pathToFollow[0];
+                followPath(pathToFollow.slice(1));
+            };
+
+            const initializeBoard = (board) => {
+                for (i = 0; i < BOARD_SIZE; i++) {
+                    const row = document.createElement("tr");
+                    row.className = "boardRow";
+                    const boardRow = [];
+                    for (j = 0; j < BOARD_SIZE; j++) {
+                        const cell = document.createElement("td");
+                        cell.className = "boardCell";
+                        row.appendChild(cell);
+                        boardRow.push(cell);
+                    }
+                    board.appendChild(row);
+                    boardCells.push(boardRow);
+                }
+            };
+
+            window.onload = function() {
+                const board = document.getElementById("board");
+                initializeBoard(board);
+            };
+        </script>
+    </head>
+    <body>
+        <table id="board">
+        </table>
+    </body>
+</html>

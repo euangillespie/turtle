@@ -2,12 +2,26 @@
     <head>
         <style>
             .boardRow {
-                height: 4em;
+                height: 80px;
             }
             .boardCell {
-                width: 4em;
+                width: 80px;
                 border-left: 1px solid black;
                 border-top: 1px solid black;
+            }
+            .container {
+                position: relative;
+            }
+            #robot {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 80px;
+                height: 80px;
+                text-align: center;
+                transition-property: left, top;
+                transition-duration: 1.5s;
+                transition-timing-function: linear;
             }
         </style>
         <script>
@@ -18,12 +32,29 @@
                 "DOWN": "DOWN",
             }
             const BOARD_SIZE = 6;
-            const path = [DIRECTIONS.LEFT, DIRECTIONS.UP, DIRECTIONS.RIGHT];
+            const STEP_DELAY = 1500;
             const boardCells = [];
 
-            const followPath = (pathToFollow) => {
+            const robotPosition = [0, 0];
+
+            const executeAction = (action, robot) => {
+                if (action == DIRECTIONS.LEFT){ 
+                    robotPosition[0] = Math.max(robotPosition[0] - 1, 0);
+                } else if (action == DIRECTIONS.RIGHT){
+                    robotPosition[0] = Math.min(robotPosition[0] + 1, BOARD_SIZE - 1);
+                } else if (action == DIRECTIONS.UP){
+                    robotPosition[1] = Math.max(robotPosition[1] - 1, 0);
+                } else if (action == DIRECTIONS.DOWN){
+                    robotPosition[1] = Math.min(robotPosition[1] + 1, BOARD_SIZE - 1);
+                }
+                robot.style.left = `${robotPosition[0] * 82}px`;
+                robot.style.top = `${robotPosition[1] * 82}px`;
+            };
+
+            const followPath = (pathToFollow, robot) => {
                 const action = pathToFollow[0];
-                followPath(pathToFollow.slice(1));
+                executeAction(action, robot);
+                setTimeout(() => followPath(pathToFollow.slice(1), robot), STEP_DELAY);
             };
 
             const initializeBoard = (board) => {
@@ -44,12 +75,27 @@
 
             window.onload = function() {
                 const board = document.getElementById("board");
+                const robot = document.getElementById("robot");
                 initializeBoard(board);
+                followPath([
+                    DIRECTIONS.RIGHT,
+                    DIRECTIONS.DOWN,
+                    DIRECTIONS.RIGHT,
+                    DIRECTIONS.DOWN,
+                    DIRECTIONS.RIGHT,
+                    DIRECTIONS.DOWN,
+                    DIRECTIONS.RIGHT,
+                    DIRECTIONS.DOWN,
+                    DIRECTIONS.RIGHT,
+                ], robot)
             };
         </script>
     </head>
     <body>
-        <table id="board">
-        </table>
+        <div class="container">
+            <div id="robot">a</div>
+            <table id="board">
+            </table>
+        </div>
     </body>
 </html>

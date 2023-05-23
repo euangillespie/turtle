@@ -9,6 +9,15 @@
                 border-left: 1px solid black;
                 border-top: 1px solid black;
             }
+            .actionCell {
+                height: 1.5em;
+                width: 100px;
+                border-left: 1px solid black;
+                border-top: 1px solid black;
+            }
+            .actionCell[current="1"] {
+                background-color: lightcyan;
+            }
             .container {
                 position: relative;
             }
@@ -33,11 +42,23 @@
             }
             const BOARD_SIZE = 6;
             const STEP_DELAY = 1500;
+
+            let robot;
+            let board;
+            let upButton;
+            let downButton;
+            let leftButton;
+            let rightButton;
+            let actionList;
+
             const boardCells = [];
-
+            const actionCells = [];
             const robotPosition = [0, 0];
+            let isMoving = false;
+            let requiredPathLength = 5;
+            let currentPath = [];
 
-            const executeAction = (action, robot) => {
+            const executeAction = (action) => {
                 if (action == DIRECTIONS.LEFT){ 
                     robotPosition[0] = Math.max(robotPosition[0] - 1, 0);
                 } else if (action == DIRECTIONS.RIGHT){
@@ -51,13 +72,43 @@
                 robot.style.top = `${robotPosition[1] * 82}px`;
             };
 
-            const followPath = (pathToFollow, robot) => {
-                const action = pathToFollow[0];
-                executeAction(action, robot);
-                setTimeout(() => followPath(pathToFollow.slice(1), robot), STEP_DELAY);
+            const endTurn = () => {
+                isMoving = false;
+                currentPath = [];
+                for (var i = 0; i < actionCells.length; i++) {
+                    actionCells[i].textContent = "";
+                    actionCells[i].setAttribute("current", "0");
+                }
             };
 
-            const initializeBoard = (board) => {
+            const followPath = (pathToFollow, index) => {
+                index = index || 0;
+                if (index >= pathToFollow.length) {
+                    endTurn();
+                    return;
+                }
+                isMoving = true;
+                const action = pathToFollow[index];
+                actionCells[index].setAttribute("current", "1");
+                for (i = 0; i < index; i++) {
+                    actionCells[i].setAttribute("current", "0");
+                }
+                executeAction(action);
+                setTimeout(() => followPath(pathToFollow, index + 1), STEP_DELAY);
+            };
+
+            const recordAction = (action) => {
+                if (isMoving) {
+                    return;
+                }
+                actionCells[currentPath.length].textContent = action;
+                currentPath.push(action);
+                if (currentPath.length >= requiredPathLength) {
+                    followPath(currentPath);
+                }
+            }
+
+            const initializeBoard = () => {
                 for (i = 0; i < BOARD_SIZE; i++) {
                     const row = document.createElement("tr");
                     row.className = "boardRow";
@@ -73,21 +124,49 @@
                 }
             };
 
+            const initializeActionList = () => {
+                for (var i = 0; i < requiredPathLength; i++) {
+                    const actionCell = document.createElement("td");
+                    actionCell.className = "actionCell";
+                    actionCells.push(actionCell);
+                    actionList.appendChild(actionCell);
+                }
+            };
+
             window.onload = function() {
-                const board = document.getElementById("board");
-                const robot = document.getElementById("robot");
-                initializeBoard(board);
-                followPath([
-                    DIRECTIONS.RIGHT,
-                    DIRECTIONS.DOWN,
-                    DIRECTIONS.RIGHT,
-                    DIRECTIONS.DOWN,
-                    DIRECTIONS.RIGHT,
-                    DIRECTIONS.DOWN,
-                    DIRECTIONS.RIGHT,
-                    DIRECTIONS.DOWN,
-                    DIRECTIONS.RIGHT,
-                ], robot)
+                board = document.getElementById("board");
+                robot = document.getElementById("robot");
+                upButton = document.getElementById("up-button");
+                downButton = document.getElementById("down-button");
+                leftButton = document.getElementById("left-button");
+                rightButton = document.getElementById("right-button");
+                actionList = document.getElementById("action-list");
+
+                initializeBoard();
+                initializeActionList();
+                upButton.onclick = () => {
+                    recordAction(DIRECTIONS.UP);
+                };
+                downButton.onclick = () => {
+                    recordAction(DIRECTIONS.DOWN);
+                };
+                leftButton.onclick = () => {
+                    recordAction(DIRECTIONS.LEFT);
+                };
+                rightButton.onclick = () => {
+                    recordAction(DIRECTIONS.RIGHT);
+                };
+                // followPath([
+                //     DIRECTIONS.RIGHT,
+                //     DIRECTIONS.DOWN,
+                //     DIRECTIONS.RIGHT,
+                //     DIRECTIONS.DOWN,
+                //     DIRECTIONS.RIGHT,
+                //     DIRECTIONS.DOWN,
+                //     DIRECTIONS.RIGHT,
+                //     DIRECTIONS.DOWN,
+                //     DIRECTIONS.RIGHT,
+                // ])
             };
         </script>
     </head>
@@ -97,5 +176,12 @@
             <table id="board">
             </table>
         </div>
+        <div class="directions">
+            <div id="up-button">^</div>
+            <div id="down-button">v</div>
+            <div id="left-button">&lt;</div>
+            <div id="right-button">&gt;</div>
+        </div>
+        <table><tr id="action-list"></tr></table>
     </body>
 </html>

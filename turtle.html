@@ -1,19 +1,24 @@
 <html>
     <head>
         <style>
+            .parent {
+                display: flex;
+                flex-direction: horizontal;
+            }
+            #board {
+                border-collapse: collapse;
+            }
             .boardRow {
                 height: 80px;
             }
             .boardCell {
                 width: 80px;
-                border-left: 1px solid black;
-                border-top: 1px solid black;
+                border: 1px solid black;
             }
             .actionCell {
                 height: 1.5em;
                 width: 100px;
-                border-left: 1px solid black;
-                border-top: 1px solid black;
+                border: 1px solid black;
             }
             .actionCell[current="1"] {
                 background-color: lightcyan;
@@ -31,6 +36,14 @@
                 transition-property: left, top;
                 transition-duration: 1.5s;
                 transition-timing-function: linear;
+            }
+            .actionListContainer {
+                margin-top: 3em;
+                border-collapse: collapse;
+                margin-left: 7em;
+            }
+            .directions img:active {
+                background-color: green;
             }
         </style>
         <script>
@@ -68,8 +81,8 @@
                 } else if (action == DIRECTIONS.DOWN){
                     robotPosition[1] = Math.min(robotPosition[1] + 1, BOARD_SIZE - 1);
                 }
-                robot.style.left = `${robotPosition[0] * 82}px`;
-                robot.style.top = `${robotPosition[1] * 82}px`;
+                robot.style.left = `${robotPosition[0] * 83}px`;
+                robot.style.top = `${robotPosition[1] * 80}px`;
             };
 
             const endTurn = () => {
@@ -101,7 +114,8 @@
                 if (isMoving) {
                     return;
                 }
-                actionCells[currentPath.length].textContent = action;
+                const actionLabel = `${action[0].toUpperCase()}${action.slice(1).toLowerCase()}`;
+                actionCells[currentPath.length].textContent = actionLabel;
                 currentPath.push(action);
                 if (currentPath.length >= requiredPathLength) {
                     followPath(currentPath);
@@ -126,10 +140,12 @@
 
             const initializeActionList = () => {
                 for (var i = 0; i < requiredPathLength; i++) {
+                    const actionRow = document.createElement("tr");
                     const actionCell = document.createElement("td");
+                    actionRow.appendChild(actionCell);
                     actionCell.className = "actionCell";
                     actionCells.push(actionCell);
-                    actionList.appendChild(actionCell);
+                    actionList.appendChild(actionRow);
                 }
             };
 
@@ -140,7 +156,7 @@
                 downButton = document.getElementById("down-button");
                 leftButton = document.getElementById("left-button");
                 rightButton = document.getElementById("right-button");
-                actionList = document.getElementById("action-list");
+                actionList = document.getElementById("actionList");
 
                 initializeBoard();
                 initializeActionList();
@@ -156,32 +172,37 @@
                 rightButton.onclick = () => {
                     recordAction(DIRECTIONS.RIGHT);
                 };
-                // followPath([
-                //     DIRECTIONS.RIGHT,
-                //     DIRECTIONS.DOWN,
-                //     DIRECTIONS.RIGHT,
-                //     DIRECTIONS.DOWN,
-                //     DIRECTIONS.RIGHT,
-                //     DIRECTIONS.DOWN,
-                //     DIRECTIONS.RIGHT,
-                //     DIRECTIONS.DOWN,
-                //     DIRECTIONS.RIGHT,
-                // ])
             };
         </script>
     </head>
     <body>
-        <div class="container">
-            <div id="robot">a</div>
-            <table id="board">
-            </table>
+        <div class="parent">
+            <div class="container">
+                <div id="robot">
+                    <img width="80" height="80" src="https://www.svgrepo.com/show/485124/roomba-style-cleaning.svg"/>
+                </div>
+                <table id="board">
+                </table>
+            </div>
+            <div>
+                <table class="directions">
+                    <tr>
+                        <td id="left-button">
+                            <img width="80" height="80" src="https://www.svgrepo.com/show/69399/left-arrow.svg"/>
+                        </td>
+                        <td id="up-button">
+                            <img width="80" height="80" src="https://www.svgrepo.com/show/343814/up-arrow.svg"/>
+                        </td>
+                        <td id="down-button">
+                            <img width="80" height="80" src="https://www.svgrepo.com/show/343772/down-arrow.svg"/>
+                        </td>
+                        <td id="right-button">
+                            <img width="80" height="80" src="https://www.svgrepo.com/show/55411/right-arrow.svg"/>
+                        </td>
+                    </tr>
+                </table>
+                <table class="actionListContainer" id="actionList"></table>
+            </div>
         </div>
-        <div class="directions">
-            <div id="up-button">^</div>
-            <div id="down-button">v</div>
-            <div id="left-button">&lt;</div>
-            <div id="right-button">&gt;</div>
-        </div>
-        <table><tr id="action-list"></tr></table>
     </body>
 </html>

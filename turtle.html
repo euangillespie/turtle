@@ -113,26 +113,53 @@
                 return newPosition;
             }
 
-            const generatePath = () => {
-                // TODO: This will produce paths with multiple solutions,
-                // like down, right, right, up left
-                // How to solve this?
-                // Every new position has to be at least one clear block away from every
-                // other position, except the last position (which it just needs to not equal)
-                // However, this could get it stuck in a corner, so need to avoid that somehow.
-                // Perhaps could just retry the whole thing if fails to find a path after N attempts.
+            const positionIsCloseTo = (position, otherPosition) => {
+                const isCloseX = position[0] >= otherPosition[0] - 1 && position[0] <= otherPosition[0] + 1 && position[1] == otherPosition[1];
+                const isCloseY = position[1] >= otherPosition[1] - 1 && position[1] <= otherPosition[1] + 1 && position[0] == otherPosition[0];
+                return isCloseX || isCloseY;
+            }
+
+            const positionIsCloseToAny = (position, otherPositions) => {
+                for (var i = 0; i < otherPositions.length; i++) {
+                    if (positionIsCloseTo(position, otherPositions[i])) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            const generatePath = (totalAttempts) => {
+                totalAttempts = totalAttempts || 0;
                 const path = [];
+                const pathPositions = [robotPosition];
                 const currentPosition = [robotPosition[0], robotPosition[1]];
                 const directionsList = [DIRECTIONS.UP, DIRECTIONS.DOWN, DIRECTIONS.RIGHT, DIRECTIONS.LEFT];
-                const seenPositions = new Set();
+                let attempts = 0;
                 while (path.length < requiredPathLength) {
                     let action = directionsList[Math.floor(Math.random() * directionsList.length)];
                     let nextPosition = getPositionAfterAction(currentPosition, action);
-                    seenPositions.add(stringifyPosition(currentPosition));
-                    if (!seenPositions.has(stringifyPosition(nextPosition))) {
+                    const positionIsUnchanged = currentPosition[0] == nextPosition[0] && currentPosition[1] == nextPosition[1];
+                    // A next action is valid if it actually changes our position (i.e. we're not running into a wall),
+                    // and it's not next to any previous positions on our path (so we're not going back on ourselves or creating loops - each path has a unique solution).
+                    if (!positionIsUnchanged && !positionIsCloseToAny(nextPosition, pathPositions.slice(0, pathPositions.length - 1))) {
                         path.push(action);
+                        pathPositions.push(nextPosition);
                         currentPosition[0] = nextPosition[0];
                         currentPosition[1] = nextPosition[1];
+                        attempts = 0;
+                    } else {
+                        attempts += 1;
+                        // If we keep failing to find a valid solution, that probably means
+                        // we've gotten stuck in a corner.
+                        // Just scrap what we've done and start again.
+                        if (attempts > 6) {
+                            if (totalAttempts < 10) {
+                                return generatePath(totalAttempts + 1);
+                            } else {
+                                window.alert("Error - please reload and try again.");
+                                return;
+                            }
+                        }
                     }
                 }
                 return path;

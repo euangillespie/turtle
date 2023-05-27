@@ -3,7 +3,6 @@
         <style>
             .parent {
                 display: flex;
-                flex-direction: horizontal;
             }
             #board {
                 border-collapse: collapse;
@@ -66,7 +65,7 @@
                 border-collapse: collapse;
                 margin-left: 7em;
             }
-            .directions img:active {
+            .parent:not(.isMoving) .directions img:active {
                 background-color: green;
             }
         </style>
@@ -82,6 +81,7 @@
 
             let robot;
             let board;
+            let parent;
             let upButton;
             let downButton;
             let leftButton;
@@ -94,6 +94,15 @@
             let isMoving = false;
             let requiredPathLength = 5;
             let currentPath = [];
+
+            const setIsMoving = (newIsMoving) => {
+                if (newIsMoving) {
+                    parent.classList.add("isMoving");
+                } else {
+                    parent.classList.remove("isMoving");
+                }
+                isMoving = newIsMoving;
+            }
 
             const stringifyPosition = (position) => {
                 return `${position[0]}:${position[1]}`;
@@ -197,7 +206,7 @@
             };
 
             const endTurn = () => {
-                isMoving = false;
+                setIsMoving(false);
                 currentPath = [];
                 board.classList.remove("failure");
                 board.classList.remove("success");
@@ -209,13 +218,11 @@
             };
 
             const onFailure = () => {
-                isMoving = false;
                 board.classList.add("failure");
                 setTimeout(endTurn, STEP_DELAY);
             };
 
             const onSuccess = () => {
-                isMoving = false;
                 board.classList.add("success");
                 setTimeout(endTurn, STEP_DELAY);
             };
@@ -238,7 +245,7 @@
                     onFailure();
                     return;
                 }
-                isMoving = true;
+                setIsMoving(true);
                 const action = pathToFollow[index];
                 actionCells[index].setAttribute("current", "1");
                 for (i = 0; i < index; i++) {
@@ -290,6 +297,7 @@
             window.onload = function() {
                 board = document.getElementById("board");
                 robot = document.getElementById("robot");
+                parent = document.getElementById("parent");
                 upButton = document.getElementById("up-button");
                 downButton = document.getElementById("down-button");
                 leftButton = document.getElementById("left-button");
@@ -316,7 +324,7 @@
         <title>Turtle</title>
     </head>
     <body>
-        <div class="parent">
+        <div class="parent" id="parent">
             <div class="container">
                 <div id="robot">
                     <img width="80" height="80" src="https://www.svgrepo.com/show/485124/roomba-style-cleaning.svg"/>

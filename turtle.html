@@ -60,6 +60,12 @@
                 transition-duration: 1.5s;
                 transition-timing-function: linear;
             }
+            #robot.shakeHorizontal {
+                animation: shakeHorizontal 0.82s cubic-bezier(.36,.07,.19,.97) both;
+            }
+            #robot.shakeVertical {
+                animation: shakeVertical 0.82s cubic-bezier(.36,.07,.19,.97) both;
+            }
             .actionListContainer {
                 margin-top: 3em;
                 border-collapse: collapse;
@@ -67,6 +73,34 @@
             }
             .parent:not(.isMoving) .directions img:active {
                 background-color: green;
+            }
+            @keyframes shakeHorizontal {
+                10%, 90% {
+                    transform: translate3d(-1px, 0, 0);
+                }
+                20%, 80% {
+                    transform: translate3d(2px, 0, 0);
+                }
+                30%, 50%, 70% {
+                    transform: translate3d(-4px, 0, 0);
+                }
+                40%, 60% {
+                    transform: translate3d(4px, 0, 0);
+                }
+            }
+            @keyframes shakeVertical {
+                10%, 90% {
+                    transform: translate3d(0, -1px, 0);
+                }
+                20%, 80% {
+                    transform: translate3d(0, 2px, 0);
+                }
+                30%, 50%, 70% {
+                    transform: translate3d(0, -4px, 0);
+                }
+                40%, 60% {
+                    transform: translate3d(0, 4px, 0);
+                }
             }
         </style>
         <script>
@@ -104,12 +138,19 @@
                 isMoving = newIsMoving;
             }
 
-            const stringifyPosition = (position) => {
-                return `${position[0]}:${position[1]}`;
+            const copyPosition = (position, to) => {
+                to = to || [0, 0];
+                to[0] = position[0];
+                to[1] = position[1];
+                return to;
+            };
+
+            const positionsEqual = (position1, position2) => {
+                return position1[0] == position2[0] && position1[1] == position2[1];
             };
 
             const getPositionAfterAction = (position, action) => {
-                const newPosition = [position[0], position[1]]
+                const newPosition = copyPosition(position);
                 if (action == DIRECTIONS.LEFT){ 
                     newPosition[0] = Math.max(position[0] - 1, 0);
                 } else if (action == DIRECTIONS.RIGHT){
@@ -141,20 +182,19 @@
                 totalAttempts = totalAttempts || 0;
                 const path = [];
                 const pathPositions = [robotPosition];
-                const currentPosition = [robotPosition[0], robotPosition[1]];
+                const currentPosition = copyPosition(robotPosition);
                 const directionsList = [DIRECTIONS.UP, DIRECTIONS.DOWN, DIRECTIONS.RIGHT, DIRECTIONS.LEFT];
                 let attempts = 0;
                 while (path.length < requiredPathLength) {
                     let action = directionsList[Math.floor(Math.random() * directionsList.length)];
                     let nextPosition = getPositionAfterAction(currentPosition, action);
-                    const positionIsUnchanged = currentPosition[0] == nextPosition[0] && currentPosition[1] == nextPosition[1];
+                    const positionIsUnchanged = positionsEqual(currentPosition, nextPosition);
                     // A next action is valid if it actually changes our position (i.e. we're not running into a wall),
                     // and it's not next to any previous positions on our path (so we're not going back on ourselves or creating loops - each path has a unique solution).
                     if (!positionIsUnchanged && !positionIsCloseToAny(nextPosition, pathPositions.slice(0, pathPositions.length - 1))) {
                         path.push(action);
                         pathPositions.push(nextPosition);
-                        currentPosition[0] = nextPosition[0];
-                        currentPosition[1] = nextPosition[1];
+                        copyPosition(nextPosition, currentPosition);
                         attempts = 0;
                     } else {
                         attempts += 1;
@@ -198,11 +238,23 @@
             };
 
             const executeAction = (action) => {
+                const lastPosition = copyPosition(robotPosition);
                 const newRobotPosition = getPositionAfterAction(robotPosition, action);
-                robotPosition[0] = newRobotPosition[0];
-                robotPosition[1] = newRobotPosition[1];
-                robot.style.left = `${robotPosition[0] * 83}px`;
-                robot.style.top = `${robotPosition[1] * 80}px`;
+                if (positionsEqual(newRobotPosition, lastPosition)) {
+                    // We've hit a wall - trigger shake in the right direction
+                    let shakeClass = "shakeHorizontal";
+                    if ([DIRECTIONS.UP, DIRECTIONS.DOWN].includes(action)) {
+                        shakeClass = "shakeVertical";
+                    }
+                    robot.classList.add(shakeClass);
+                    setTimeout(() => {
+                        robot.classList.remove(shakeClass);
+                    }, STEP_DELAY - 500); // Remove this before the next turn, so if it gets re-added the animation will play again.
+                } else {
+                    copyPosition(newRobotPosition, robotPosition);
+                    robot.style.left = `${robotPosition[0] * 83}px`;
+                    robot.style.top = `${robotPosition[1] * 80}px`;
+                }
             };
 
             const endTurn = () => {
